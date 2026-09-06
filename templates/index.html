@@ -71,7 +71,9 @@
 </head>
 <body>
 
-<div class="page-body">
+<a href="#input" class="skip-link">Skip to message input</a>
+
+<main class="page-body">
   <div class="chat-container">
     <div class="chat-header">
       <div>
@@ -81,19 +83,20 @@
       <a class="logout" href="/logout">Log out</a>
     </div>
     <div class="mode-row">
-      <div class="mode-selector">
-        <button class="mode-btn active" id="mode-general" onclick="setMode('general')">General</button>
-        <button class="mode-btn" id="mode-coding" onclick="setMode('coding')">Code</button>
-        <button class="mode-btn" id="mode-image" onclick="setMode('image')">Image</button>
+      <div class="mode-selector" role="group" aria-label="Response mode">
+        <button class="mode-btn active" id="mode-general" onclick="setMode('general')" aria-pressed="true">General</button>
+        <button class="mode-btn" id="mode-coding" onclick="setMode('coding')" aria-pressed="false">Code</button>
+        <button class="mode-btn" id="mode-image" disabled aria-disabled="true" title="Image generation is currently unavailable">Image (unavailable)</button>
       </div>
     </div>
-    <div class="messages" id="messages"></div>
-    <div class="input-row">
+    <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Conversation"></div>
+    <form class="input-row" onsubmit="event.preventDefault(); sendMessage();">
+      <label for="input" class="sr-only">Type a message</label>
       <input type="text" id="input" placeholder="Type a message..." autocomplete="off">
-      <button class="primary" onclick="sendMessage()">Send</button>
-    </div>
+      <button class="primary" type="submit">Send</button>
+    </form>
   </div>
-</div>
+</main>
 
 <footer class="site-footer">
   &copy; {{ copyright_year }} {{ brand }}. All rights reserved.
@@ -120,7 +123,10 @@ const modePlaceholders = {
 function setMode(mode) {
   currentMode = mode;
   ['general', 'coding', 'image'].forEach(m => {
-    document.getElementById('mode-' + m).classList.toggle('active', m === mode);
+    const btn = document.getElementById('mode-' + m);
+    const isActive = m === mode;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
   inputEl.placeholder = modePlaceholders[mode];
   addMessage(modeGreetings[mode], 'notice');
@@ -150,12 +156,13 @@ function addMessage(text, sender, meta) {
   return div;
 }
 
-function addImageMessage(base64Data) {
+function addImageMessage(base64Data, promptText) {
   const div = document.createElement('div');
   div.className = 'msg bot';
   const img = document.createElement('img');
   img.className = 'msg-image';
   img.src = 'data:image/png;base64,' + base64Data;
+  img.alt = 'AI-generated image for: ' + promptText;
   div.appendChild(img);
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -165,7 +172,7 @@ function addTypingIndicator() {
   const div = document.createElement('div');
   div.className = 'msg bot';
   div.id = 'typing-indicator';
-  div.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+  div.innerHTML = '<span class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></span><span class="sr-only">Assistant is typing</span>';
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
@@ -196,7 +203,7 @@ async function sendMessage() {
     const data = await res.json();
 
     if (data.image_b64) {
-      addImageMessage(data.image_b64);
+      addImageMessage(data.image_b64, text);
     } else if (data.config_error || data.request_error) {
       addMessage(data.response, 'notice');
     } else if (data.response) {
@@ -210,7 +217,9 @@ async function sendMessage() {
   }
 }
 
-inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+// Enter-to-send is handled by the <form> submit event now (see the form's
+// onsubmit above), which is the standard, accessible way for a text input
+// to respond to Enter — a separate keydown listener here would double-send.
 
 addMessage(modeGreetings.general, 'bot');
 </script>
