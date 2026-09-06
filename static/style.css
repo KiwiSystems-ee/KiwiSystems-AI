@@ -322,3 +322,64 @@ footer.site-footer a:hover { color: var(--kiwi-green); text-decoration: underlin
 }
 .mode-btn.active { background: var(--accent-gradient); color: #06070C; }
 .mode-btn:not(.active):hover { color: var(--ink); }
+.mode-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mode-btn:disabled:hover { color: var(--muted); }
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+/* Visible keyboard focus on every interactive element. Browsers already do
+   this by default, but custom-styled inputs/buttons often accidentally
+   suppress it -- this makes sure it's always present and consistent. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--kiwi-green);
+  outline-offset: 2px;
+}
+
+/* Skip link: hidden until focused, lets keyboard/screen-reader users jump
+   past the header straight to the main content on every page. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--kiwi-green);
+  color: #06070C;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  z-index: 2000;
+}
+.skip-link:focus {
+  left: 16px;
+  top: 16px;
+}
+
+/* Screen-reader-only text: visually hidden, still announced by assistive tech. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Respect the OS-level "reduce motion" preference: stop the typing-dots
+   animation and decorative gradient blobs from moving for anyone who's
+   asked their system to minimize motion. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
