@@ -125,46 +125,50 @@
 </head>
 <body>
 
-<div id="login-card" class="page-center">
+<main id="login-card" class="page-center">
   <div class="card" id="admin-step-password">
     {% include '_brand.html' %}
     <h2>Admin Login</h2>
     <p>Log in with an admin account to access the console.</p>
-    <label for="admin-username">Username</label>
-    <input type="text" id="admin-username" autocomplete="username">
-    <label for="admin-password">Password</label>
-    <input type="password" id="admin-password" autocomplete="current-password" onkeydown="if(event.key==='Enter') login()">
-    <button class="primary" onclick="login()">Log in</button>
-    <div class="error" id="login-error"></div>
+    <form onsubmit="event.preventDefault(); login();">
+      <label for="admin-username">Username</label>
+      <input type="text" id="admin-username" autocomplete="username">
+      <label for="admin-password">Password</label>
+      <input type="password" id="admin-password" autocomplete="current-password">
+      <button class="primary" type="submit">Log in</button>
+      <div class="error" id="login-error" role="alert"></div>
+    </form>
   </div>
 
   <div class="card" id="admin-step-2fa" style="display:none;">
     {% include '_brand.html' %}
     <h2>Enter your code</h2>
     <p>We emailed a 6-digit code to the address on this account.</p>
-    <label for="admin-code">Verification code</label>
-    <input type="text" id="admin-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" onkeydown="if(event.key==='Enter') adminVerify()">
-    <button class="primary" onclick="adminVerify()">Verify</button>
-    <div class="error" id="admin-verify-error"></div>
+    <form onsubmit="event.preventDefault(); adminVerify();">
+      <label for="admin-code">Verification code</label>
+      <input type="text" id="admin-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
+      <button class="primary" type="submit">Verify</button>
+      <div class="error" id="admin-verify-error" role="alert"></div>
+    </form>
     <div class="switch-link"><a href="#" onclick="adminResendCode(); return false;">Resend code</a></div>
   </div>
-</div>
+</main>
 
-<div id="console" class="page-body" style="display:none;">
+<main id="console" class="page-body" style="display:none;">
   <div class="console">
     <div class="console-top">
       <div>
         {% include '_brand.html' %}
         <div class="sub">Admin console</div>
       </div>
-      <div class="tabs">
-        <button class="tab-btn active" id="tab-chat" onclick="showTab('chat')">Teach Console</button>
-        <button class="tab-btn" id="tab-users" onclick="showTab('users')">Users</button>
-        <button class="tab-btn" id="tab-settings" onclick="showTab('settings')">Settings</button>
+      <div class="tabs" role="tablist" aria-label="Admin sections">
+        <button class="tab-btn active" id="tab-chat" onclick="showTab('chat')" role="tab" aria-selected="true">Teach Console</button>
+        <button class="tab-btn" id="tab-users" onclick="showTab('users')" role="tab" aria-selected="false">Users</button>
+        <button class="tab-btn" id="tab-settings" onclick="showTab('settings')" role="tab" aria-selected="false">Settings</button>
       </div>
     </div>
 
-    <div class="panel" id="chat-view">
+    <div class="panel" id="chat-view" role="tabpanel" aria-labelledby="tab-chat">
       <div class="panel-header">
         <div>
           <div class="title">Teach Console</div>
@@ -183,19 +187,20 @@
         <textarea id="code-answer" rows="8" placeholder="def reverse_list(items):&#10;    return items[::-1]"></textarea>
         <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
           <button class="primary" style="margin:0; width:auto;" onclick="teachCode()">Teach this code</button>
-          <div class="error form-error" id="code-form-error" style="margin:0;"></div>
+          <div class="error form-error" id="code-form-error" style="margin:0;" role="alert"></div>
         </div>
       </div>
 
-      <div class="messages" id="messages"></div>
+      <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Teach console output"></div>
       <div class="hint-bar" id="hint-bar">Tip: type /teach to start teaching, then send lines like "question => answer". Use /rule &lt;text&gt; anytime to shape how the AI speaks.</div>
       <div class="input-row">
+        <label for="input" class="sr-only">Teach console command or message</label>
         <input type="text" id="input" placeholder="Type a message or command..." autocomplete="off">
         <button class="primary" onclick="sendMessage()">Send</button>
       </div>
     </div>
 
-    <div class="panel" id="users-view" style="display:none;">
+    <div class="panel" id="users-view" style="display:none;" role="tabpanel" aria-labelledby="tab-users">
       <div class="panel-header">
         <div>
           <div class="title">Registered Users</div>
@@ -210,8 +215,8 @@
           <input type="text" id="new-username">
         </div>
         <div class="field">
-          <label>Email (for 2FA)</label>
-          <input type="email" id="new-email">
+          <label>Email (required)</label>
+          <input type="email" id="new-email" required>
         </div>
         <div class="field">
           <label>Password</label>
@@ -222,7 +227,7 @@
           <label for="new-is-admin">Admin access</label>
         </div>
         <button class="primary" onclick="createUser()">Create user</button>
-        <div class="error form-error" id="create-user-error"></div>
+        <div class="error form-error" id="create-user-error" role="alert"></div>
       </div>
 
       <div class="users-table-wrap">
@@ -236,7 +241,7 @@
       </div>
     </div>
 
-    <div class="panel" id="settings-view" style="display:none;">
+    <div class="panel" id="settings-view" style="display:none;" role="tabpanel" aria-labelledby="tab-settings">
       <div class="panel-header">
         <div>
           <div class="title">AI Settings</div>
@@ -283,7 +288,7 @@
 
         <div class="settings-card">
           <h3><span class="cat-dot"></span> Email / 2FA (EmailJS)</h3>
-          <p class="desc">Powers login verification codes, sent to whatever email address a user has on file (Users tab) — no email set means 2FA is skipped for that account. Get these from your EmailJS dashboard: Service ID, Template ID, and your Public/Private keys under Account &gt; API Keys. Your EmailJS template needs a variable like <code>{{ '{{to_email}}' }}</code> set as the "To Email" field, plus <code>{{ '{{code}}' }}</code> in the body.</p>
+          <p class="desc">Login verification is mandatory — every account requires an email (set at signup, or by an admin in the Users tab), and a code is sent at every login. Get these from your EmailJS dashboard: Service ID, Template ID, and your Public/Private keys under Account &gt; API Keys. Your EmailJS template needs a variable like <code>{{ '{{to_email}}' }}</code> set as the "To Email" field, plus <code>{{ '{{code}}' }}</code> in the body.</p>
           <div class="settings-row">
             <div class="field"><label>Service ID</label><input type="text" id="email-service-id" placeholder="service_xxxxxxx"></div>
             <div class="field"><label>Template ID</label><input type="text" id="email-template-id" placeholder="template_xxxxxxx"></div>
@@ -305,7 +310,7 @@
       </div>
     </div>
   </div>
-</div>
+</main>
 
 <footer class="site-footer">
   &copy; {{ copyright_year }} {{ brand }}. All rights reserved.
@@ -387,6 +392,9 @@ function showTab(tab) {
   document.getElementById('tab-chat').classList.toggle('active', tab === 'chat');
   document.getElementById('tab-users').classList.toggle('active', tab === 'users');
   document.getElementById('tab-settings').classList.toggle('active', tab === 'settings');
+  document.getElementById('tab-chat').setAttribute('aria-selected', tab === 'chat' ? 'true' : 'false');
+  document.getElementById('tab-users').setAttribute('aria-selected', tab === 'users' ? 'true' : 'false');
+  document.getElementById('tab-settings').setAttribute('aria-selected', tab === 'settings' ? 'true' : 'false');
   document.getElementById('chat-view').style.display = tab === 'chat' ? 'flex' : 'none';
   document.getElementById('users-view').style.display = tab === 'users' ? 'flex' : 'none';
   document.getElementById('settings-view').style.display = tab === 'settings' ? 'flex' : 'none';
@@ -440,6 +448,11 @@ async function createUser() {
   const is_admin = document.getElementById('new-is-admin').checked;
   const errorEl = document.getElementById('create-user-error');
   errorEl.textContent = '';
+
+  if (!email) {
+    errorEl.textContent = 'Email is required — login uses mandatory verification codes.';
+    return;
+  }
 
   const res = await fetch('/api/admin/users', {
     method: 'POST',
