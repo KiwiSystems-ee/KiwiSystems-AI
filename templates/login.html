@@ -7,20 +7,22 @@
 </head>
 <body>
 
-<div class="page-center">
+<main class="page-center">
   <div class="card" id="step-password">
     {% include '_brand.html' %}
     <h2>Log in</h2>
     <p>Welcome back. Log in to start chatting.</p>
 
-    <label for="username">Username</label>
-    <input type="text" id="username" autocomplete="username">
+    <form onsubmit="event.preventDefault(); doLogin();">
+      <label for="username">Username</label>
+      <input type="text" id="username" autocomplete="username">
 
-    <label for="password">Password</label>
-    <input type="password" id="password" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+      <label for="password">Password</label>
+      <input type="password" id="password" autocomplete="current-password">
 
-    <button class="primary" onclick="doLogin()">Log in</button>
-    <div class="error" id="error"></div>
+      <button class="primary" type="submit">Log in</button>
+      <div class="error" id="error" role="alert"></div>
+    </form>
 
     <div class="switch-link">Don't have an account? <a href="/signup">Sign up</a></div>
   </div>
@@ -30,15 +32,17 @@
     <h2>Enter your code</h2>
     <p>We emailed a 6-digit code to the address on your account.</p>
 
-    <label for="code">Verification code</label>
-    <input type="text" id="code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" onkeydown="if(event.key==='Enter') doVerify()">
+    <form onsubmit="event.preventDefault(); doVerify();">
+      <label for="code">Verification code</label>
+      <input type="text" id="code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
 
-    <button class="primary" onclick="doVerify()">Verify</button>
-    <div class="error" id="verify-error"></div>
+      <button class="primary" type="submit">Verify</button>
+      <div class="error" id="verify-error" role="alert"></div>
+    </form>
 
     <div class="switch-link"><a href="#" onclick="resendCode(); return false;">Resend code</a></div>
   </div>
-</div>
+</main>
 
 <footer class="site-footer">
   &copy; {{ copyright_year }} {{ brand }}. All rights reserved.
