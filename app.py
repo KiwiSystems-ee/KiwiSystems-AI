@@ -150,6 +150,8 @@ def api_signup():
 
     if not username or not password:
         return jsonify({"ok": False, "error": "Username and password are required"}), 400
+    if not email:
+        return jsonify({"ok": False, "error": "Email is required (used for mandatory login verification codes)"}), 400
     if len(password) < 6:
         return jsonify({"ok": False, "error": "Password must be at least 6 characters"}), 400
 
@@ -370,6 +372,8 @@ def admin_create_user():
 
     if not username or not password:
         return jsonify({"ok": False, "error": "Username and password are required"}), 400
+    if not email:
+        return jsonify({"ok": False, "error": "Email is required (used for mandatory login verification codes)"}), 400
     if len(password) < 6:
         return jsonify({"ok": False, "error": "Password must be at least 6 characters"}), 400
 
@@ -446,6 +450,7 @@ def admin_update_settings():
             template_id=data.get("template_id"),
             public_key=data.get("public_key"),
             private_key=data.get("private_key"),
+            enabled=data.get("enabled"),
         )
         return jsonify({"ok": True, "category": "email_2fa", "settings": updated})
 
