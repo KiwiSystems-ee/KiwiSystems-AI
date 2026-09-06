@@ -6,39 +6,72 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <style>
   body { display: flex; flex-direction: column; min-height: 100vh; }
-  .doc { max-width: 640px; margin: 0 auto; padding: 60px 20px 40px; flex: 1; }
-  .doc h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px; margin: 20px 0 6px; }
+  .doc { max-width: 680px; margin: 0 auto; padding: 60px 20px 40px; flex: 1; }
+  .doc h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 26px; margin: 20px 0 4px; color: var(--ink); }
+  .doc h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 17px; margin: 32px 0 10px; color: var(--ink); }
   .doc p, .doc li { color: var(--muted); font-size: 14.5px; line-height: 1.65; }
   .doc ul { padding-left: 20px; }
-  .placeholder-note {
-    background: var(--amber-soft); border: 1px solid var(--amber); color: #7A5316;
-    padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; margin: 20px 0 24px;
+  .doc strong { color: var(--ink); }
+  .updated { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .draft-note {
+    background: var(--amber-soft); border: 1px solid var(--amber); color: #F5C066;
+    padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; margin: 20px 0 28px; line-height: 1.5;
   }
-  .back-links { font-size: 13.5px; margin-top: 8px; }
+  .back-links { font-size: 13.5px; margin-top: 30px; }
   .back-links a { color: var(--kiwi-green); font-weight: 600; text-decoration: none; }
   .back-links a:hover { text-decoration: underline; }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--kiwi-green); outline-offset: 2px; }
 </style>
 </head>
 <body>
-<div class="doc">
+<main class="doc">
   {% include '_brand.html' %}
   <h1>Privacy Policy</h1>
-  <div class="placeholder-note">
-    This is a placeholder page. Replace this content with your actual Privacy Policy before real users rely on it.
+  <p class="updated">Last updated: {{ copyright_year }}</p>
+
+  <div class="draft-note">
+    This is a draft written to accurately describe what {{ brand }} actually collects and does, based on how the
+    service is built. It is not legal advice. If members of the public beyond your own team will rely on this,
+    have it reviewed by a qualified professional for your jurisdiction before publishing it as final.
   </div>
-  <p>This page is a placeholder describing what {{ brand }} currently collects, for transparency:</p>
+
+  <h2>What we collect</h2>
   <ul>
-    <li>Username, email address, and password (stored as a hash, never in plain text)</li>
-    <li>IP address and timestamp at the time of signup</li>
-    <li>Messages sent in chat, so the assistant can respond and (in the admin console) be taught new responses</li>
-    <li>A cookie recording your cookie-consent choice</li>
+    <li><strong>Account information:</strong> your username, email address, and password. Your password is stored as a one-way cryptographic hash — we cannot see or recover your actual password.</li>
+    <li><strong>Signup metadata:</strong> the IP address and timestamp recorded at the moment you create an account.</li>
+    <li><strong>Messages you send in chat:</strong> to generate a response, your message is sent to our AI provider (NVIDIA) at the time you send it. We don't separately log a permanent transcript of every conversation.</li>
+    <li><strong>Content taught by an administrator:</strong> facts or example answers an admin adds through the Teach Console are stored so the assistant can reference them in future replies.</li>
+    <li><strong>Login verification codes:</strong> if 2FA is enabled on your account, a short-lived 6-digit code is generated at login and sent to your email. It expires automatically after 5 minutes and is deleted once used.</li>
+    <li><strong>A cookie</strong> recording whether you accepted or declined non-essential cookies, and a session cookie that keeps you logged in.</li>
   </ul>
+
+  <h2>Who else sees this data</h2>
+  <p>We use a small number of external services to run {{ brand }}. Each only receives the specific data needed for its job:</p>
+  <ul>
+    <li><strong>NVIDIA (NIM API):</strong> receives the text of your chat messages in order to generate a response.</li>
+    <li><strong>EmailJS:</strong> receives your email address and a verification code, in order to deliver 2FA login codes.</li>
+    <li><strong>Upstash:</strong> our database provider — stores account details, taught content, and settings.</li>
+  </ul>
+  <p>We don't sell personal data, and we don't share it with anyone beyond what's needed to run the service as described above.</p>
+
+  <h2>How long we keep it</h2>
   <p>
-    Replace this section with how this data is actually used, how long it's kept, who can access it,
-    and how someone can request their data be deleted.
+    Account data is kept for as long as your account exists. Verification codes expire automatically within
+    minutes. An admin can delete an account or edit its details at any time from the admin console.
   </p>
+
+  <h2>Your choices</h2>
+  <p>
+    You can decline non-essential cookies using the banner shown on your first visit. To have your account
+    or personal data corrected or deleted, contact an admin directly — accounts can currently only be
+    managed through the admin console, not self-service.
+  </p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy can be directed to an administrator of {{ brand }}.</p>
+
   <p class="back-links"><a href="/">&larr; Back to chat</a> &nbsp;·&nbsp; <a href="/terms">Terms of Use</a></p>
-</div>
+</main>
 
 <footer class="site-footer">
   &copy; {{ copyright_year }} {{ brand }}. All rights reserved.
