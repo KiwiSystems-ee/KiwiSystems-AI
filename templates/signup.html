@@ -8,7 +8,7 @@
 <body>
 
 <main class="page-center">
-  <div class="card">
+  <div class="card" id="step-details">
     {% include '_brand.html' %}
     <h2>Create an account</h2>
     <p>By signing up you agree to our <a href="/terms">Terms of Use</a> and <a href="/privacy">Privacy Policy</a>.</p>
@@ -17,7 +17,7 @@
       <label for="username">Username</label>
       <input type="text" id="username" autocomplete="username">
 
-      <label for="email">Email (required — used for mandatory login verification codes)</label>
+      <label for="email">Email (required — verified before your account is created)</label>
       <input type="email" id="email" autocomplete="email" required>
 
       <label for="password">Password</label>
@@ -30,6 +30,22 @@
 
     <div class="switch-link">Already have an account? <a href="/login">Log in</a></div>
   </div>
+
+  <div class="card" id="step-2fa" style="display:none;">
+    {% include '_brand.html' %}
+    <h2>Verify your email</h2>
+    <p>We emailed a 6-digit code to the address you entered. Enter it to finish creating your account.</p>
+
+    <form onsubmit="event.preventDefault(); doVerify();">
+      <label for="code">Verification code</label>
+      <input type="text" id="code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
+
+      <button class="primary" type="submit">Verify and create account</button>
+      <div class="error" id="verify-error" role="alert"></div>
+    </form>
+
+    <div class="switch-link"><a href="#" onclick="resendCode(); return false;">Resend code</a></div>
+  </div>
 </main>
 
 <footer class="site-footer">
@@ -39,6 +55,8 @@
 
 <script src="{{ url_for('static', filename='cookie-consent.js') }}"></script>
 <script>
+let pendingUsername = '';
+
 async function doSignup() {
   const username = document.getElementById('username').value.trim();
   const email = document.getElementById('email').value.trim();
@@ -51,7 +69,7 @@ async function doSignup() {
     return;
   }
   if (!email) {
-    errorEl.textContent = 'Email is required — login uses mandatory verification codes.';
+    errorEl.textContent = 'Email is required — it gets verified before your account is created.';
     return;
   }
 
@@ -61,11 +79,52 @@ async function doSignup() {
     body: JSON.stringify({ username, email, password })
   });
   const data = await res.json();
+
+  if (!data.ok) {
+    errorEl.textContent = data.error || 'Signup failed';
+    return;
+  }
+
+  if (data.requires_verification) {
+    pendingUsername = username;
+    document.getElementById('step-details').style.display = 'none';
+    document.getElementById('step-2fa').style.display = 'block';
+  } else {
+    // Email couldn't be sent (e.g. EmailJS not configured yet) -- the
+    // account was still created so signup isn't blocked entirely.
+    window.location.href = '/';
+  }
+}
+
+async function doVerify() {
+  const code = document.getElementById('code').value.trim();
+  const errorEl = document.getElementById('verify-error');
+  errorEl.textContent = '';
+
+  const res = await fetch('/api/signup/verify-2fa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: pendingUsername, code })
+  });
+  const data = await res.json();
   if (data.ok) {
     window.location.href = '/';
   } else {
-    errorEl.textContent = data.error || 'Signup failed';
+    errorEl.textContent = data.error || 'Verification failed';
   }
+}
+
+async function resendCode() {
+  const errorEl = document.getElementById('verify-error');
+  errorEl.textContent = '';
+  const res = await fetch('/api/signup/resend-2fa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: pendingUsername })
+  });
+  const data = await res.json();
+  errorEl.style.color = data.ok ? 'var(--kiwi-green)' : 'var(--error)';
+  errorEl.textContent = data.ok ? 'New code sent.' : (data.error || 'Could not resend code');
 }
 </script>
 
