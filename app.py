@@ -141,6 +141,10 @@ def privacy_page():
 
 # ---------------------------------------------------------- account api ----
 
+def _pending_signup_key(username: str) -> str:
+    return f"signup_pending:{username.strip().lower()}"
+
+
 @app.route("/api/signup", methods=["POST"])
 def api_signup():
     data = request.get_json(force=True)
@@ -154,13 +158,72 @@ def api_signup():
         return jsonify({"ok": False, "error": "Email is required (used for mandatory login verification codes)"}), 400
     if len(password) < 6:
         return jsonify({"ok": False, "error": "Password must be at least 6 characters"}), 400
+    if accounts.username_exists(username):
+        return jsonify({"ok": False, "error": "Username already taken"}), 409
+
+    # Hash the password up front so nothing plain-text is ever stored,
+    # even briefly, while waiting on the verification code.
+    password_hash = accounts.hash_password(password)
+    code = f"{random.randint(0, 999999):06d}"
 
     try:
-        accounts.create_user(username, email, password, _client_ip())
+        emailjs_client.send_email(ai_settings.get_email_2fa(), email, code, BOT_NAME)
+    except (EmailConfigError, EmailRequestError) as e:
+        # Can't verify the email right now -- don't block signup entirely,
+        # create the account directly and surface the problem to fix in Settings.
+        try:
+            accounts.create_user_from_hash(username, email, password_hash, _client_ip())
+        except ValueError as ve:
+            return jsonify({"ok": False, "error": str(ve)}), 409
+        session["username"] = username
+        return jsonify({"ok": True, "requires_verification": False, "email_warning": str(e)})
+
+    kv_store.set_json(
+        _pending_signup_key(username),
+        {"email": email, "password_hash": password_hash, "ip_address": _client_ip(), "code": code},
+        ex_seconds=CODE_TTL_SECONDS,
+    )
+    return jsonify({"ok": True, "requires_verification": True})
+
+
+@app.route("/api/signup/verify-2fa", methods=["POST"])
+def api_signup_verify_2fa():
+    data = request.get_json(force=True)
+    username = (data.get("username") or "").strip()
+    code = (data.get("code") or "").strip()
+
+    pending = kv_store.get_json(_pending_signup_key(username), default=None)
+    if not pending or pending.get("code") != code:
+        return jsonify({"ok": False, "error": "Invalid or expired code"}), 401
+
+    try:
+        accounts.create_user_from_hash(username, pending["email"], pending["password_hash"], pending["ip_address"])
     except ValueError as e:
+        kv_store.delete(_pending_signup_key(username))
         return jsonify({"ok": False, "error": str(e)}), 409
 
+    kv_store.delete(_pending_signup_key(username))
     session["username"] = username
+    return jsonify({"ok": True})
+
+
+@app.route("/api/signup/resend-2fa", methods=["POST"])
+def api_signup_resend_2fa():
+    data = request.get_json(force=True)
+    username = (data.get("username") or "").strip()
+
+    pending = kv_store.get_json(_pending_signup_key(username), default=None)
+    if not pending:
+        return jsonify({"ok": False, "error": "Nothing pending -- start signup again"}), 400
+
+    code = f"{random.randint(0, 999999):06d}"
+    try:
+        emailjs_client.send_email(ai_settings.get_email_2fa(), pending["email"], code, BOT_NAME)
+    except (EmailConfigError, EmailRequestError) as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+    pending["code"] = code
+    kv_store.set_json(_pending_signup_key(username), pending, ex_seconds=CODE_TTL_SECONDS)
     return jsonify({"ok": True})
 
 
