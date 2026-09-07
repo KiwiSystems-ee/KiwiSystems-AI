@@ -43,8 +43,11 @@ def username_exists(username: str) -> bool:
     return _find(_load(), username) is not None
 
 
-def create_user(username: str, email: str, password: str, ip_address: str, is_admin: bool = False) -> dict:
-    """Create a new account. Raises ValueError if the username is taken."""
+def hash_password(password: str) -> str:
+    return generate_password_hash(password)
+
+
+def _insert_user(username: str, email: str, password_hash: str, ip_address: str, is_admin: bool = False) -> dict:
     with _lock:
         data = _load()
         if _find(data, username):
@@ -53,7 +56,7 @@ def create_user(username: str, email: str, password: str, ip_address: str, is_ad
         user = {
             "username": username.strip(),
             "email": email.strip(),
-            "password_hash": generate_password_hash(password),
+            "password_hash": password_hash,
             "ip_address": ip_address,
             "signed_up_at": datetime.now(timezone.utc).isoformat(timespec="seconds") + "Z",
             "is_admin": bool(is_admin),
@@ -61,6 +64,20 @@ def create_user(username: str, email: str, password: str, ip_address: str, is_ad
         data["users"].append(user)
         _save(data)
         return {k: v for k, v in user.items() if k != "password_hash"}
+
+
+def create_user(username: str, email: str, password: str, ip_address: str, is_admin: bool = False) -> dict:
+    """Create a new account from a plain-text password. Raises ValueError if the username is taken."""
+    return _insert_user(username, email, hash_password(password), ip_address, is_admin)
+
+
+def create_user_from_hash(username: str, email: str, password_hash: str, ip_address: str, is_admin: bool = False) -> dict:
+    """
+    Create a new account from an already-hashed password. Used after signup
+    email verification, where the password was hashed up front so nothing
+    plain-text ever sits in the pending-verification record.
+    """
+    return _insert_user(username, email, password_hash, ip_address, is_admin)
 
 
 def get_user(username: str) -> dict:
