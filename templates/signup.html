@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <title>Sign up · {{ brand }}</title>
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#0A0B14">
+<link rel="icon" href="{{ url_for('static', filename='icons/favicon.png') }}" type="image/png">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KiwiSystems">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -89,9 +97,13 @@ async function doSignup() {
     pendingUsername = username;
     document.getElementById('step-details').style.display = 'none';
     document.getElementById('step-2fa').style.display = 'block';
+  } else if (data.email_warning) {
+    // Email couldn't be sent -- the account was still created so signup
+    // isn't blocked entirely, but the person should know verification
+    // didn't actually happen, not just get silently logged in.
+    alert('Account created, but the verification email could not be sent:\n\n' + data.email_warning + '\n\nAn admin should check the Email/2FA settings.');
+    window.location.href = '/';
   } else {
-    // Email couldn't be sent (e.g. EmailJS not configured yet) -- the
-    // account was still created so signup isn't blocked entirely.
     window.location.href = '/';
   }
 }
