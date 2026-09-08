@@ -143,6 +143,12 @@ a { color: var(--kiwi-green); }
   position: relative;
 }
 
+@media (min-width: 900px) {
+  .card { width: 460px; padding: 40px; }
+  .card h2 { font-size: 24px; }
+  .card input[type=text], .card input[type=password], .card input[type=email] { padding: 13px 16px; font-size: 15px; }
+}
+
 .card .brand-row { margin-bottom: 18px; }
 .card h2 {
   margin: 0 0 4px 0;
